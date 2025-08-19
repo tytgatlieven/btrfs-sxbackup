@@ -25,7 +25,9 @@ classifiers = [
 # Runtime dependencies
 # setuptools is required at runtime for components that rely on its functionality
 # Align minimal version with build-system requires
-dependencies = []
+dependencies = [
+  "setuptools>=61",
+]
 
 [project.optional-dependencies]
 docs = [
