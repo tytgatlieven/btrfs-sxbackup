@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "btrfs-sxbackup"
+dynamic = ["version"]
+description = "Incremental btrfs snapshot backups with push/pull support via SSH"
+readme = {file = "README.rst", content-type = "text/x-rst"}
+license = "GPL-2.0-or-later"
+authors = [
+  {name = "Marco Schindler", email = "masc@disappear.de"},
+]
+urls = {Homepage = "https://github.com/masc3d/btrfs-sxbackup"}
+classifiers = [
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "Intended Audience :: System Administrators",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: System :: Filesystems",
+  "Topic :: System :: Archiving :: Backup",
+  "Topic :: Utilities",
+]
+# Runtime dependencies
+# setuptools is required at runtime for components that rely on its functionality
+# Align minimal version with build-system requires
+dependencies = []
+
+[project.optional-dependencies]
+docs = [
+  "sphinx",
+  "sphinxcontrib-autoprogram",
+  "jinja2",
+]
+
+[project.scripts]
+"btrfs-sxbackup" = "btrfs_sxbackup.cli:main"
+
+[tool.setuptools]
+# Explicitly list the main package as in setup.py
+packages = ["btrfs_sxbackup"]
+package-dir = {"" = "."}
+
+[tool.setuptools.dynamic]
+version = {attr = "btrfs_sxbackup.__version__"}
+
+[tool.setuptools.data-files]
+# Install prebuilt man pages if present (generated previously into docs/man)
+"man/man1" = ["docs/man/*.1"]
