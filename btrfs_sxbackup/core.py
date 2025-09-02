@@ -108,7 +108,7 @@ class Location:
         self.__url = None
 
         self.url = url
-        
+
         self.filesystem = Filesystem(self.build_path(), self.url)
 
     @property
@@ -190,7 +190,7 @@ class Location:
         return self.exec_check_output('uname -srvo').decode().strip()
 
     def get_btrfs_progs_version(self):
-        return self.exec_check_output('btrfs version').decode().strip()
+        return self.exec_check_output('btrfs version').decode().splitlines()[0].strip().split(' v')[-1]
 
     def dir_exists(self, path) -> bool:
         path = self.build_path(path)
@@ -256,16 +256,19 @@ class Location:
         # Transfer temporary snapshot
         self._log_info('transferring snapshot')
 
-        # btrfs send command/subprocess
-        ionice_command_str = 'ionice -c3'
-        send_command_str = ionice_command_str
         if not identical_filesystem:
+            # btrfs send command/subprocess
+            ionice_command_str = 'ionice -c3 '
+            send_command_str = ionice_command_str
+            send_command_str += 'btrfs send '
+            if compress and (self.get_btrfs_progs_version() >= '6.0' and dest.get_btrfs_progs_version() >= '6.0'):
+                send_command_str += "--compressed-data "
             if source_parent_path:
-                send_command_str += ' btrfs send -p "%s" "%s"' % (source_parent_path, source_path)
+                send_command_str += '-p "%s" "%s"' % (source_parent_path, source_path)
             else:
-                send_command_str += ' btrfs send "%s"' % source_path
+                send_command_str += '"%s"' % source_path
 
-            if compress:
+            if compress and (self.get_btrfs_progs_version() < '6.0' or dest.get_btrfs_progs_version() < '6.0'):
                 send_command_str += ' | lzop -1'
 
             try:
@@ -280,7 +283,7 @@ class Location:
 
                 # btrfs receive command/subprocess
                 receive_command_str = ionice_command_str + ' btrfs receive "%s"' % dest_path
-                if compress:
+                if compress and (self.get_btrfs_progs_version() < '6.0' or dest.get_btrfs_progs_version() < '6.0'):
                     receive_command_str = 'lzop -d | ' + receive_command_str
 
                 receive_process = subprocess.Popen(dest.build_subprocess_args(receive_command_str),
@@ -440,7 +443,7 @@ class JobLocation(Location):
     @compress.setter
     def compress(self, compress: bool):
         self.__compress = compress
-    
+
     @property
     def identical_filesystem(self) -> bool:
         return self.__identical_filesystem
@@ -451,6 +454,7 @@ class JobLocation(Location):
 
     @property
     def container_subvolume_path(self) -> str:
+
         return os.path.join(self.url.path, self.container_subvolume_relpath) \
             if self.container_subvolume_relpath else self.url.path
 
@@ -600,7 +604,7 @@ class JobLocation(Location):
                 self._log_error(str(ex))
 
     def write_configuration(self, corresponding_location: 'JobLocation'):
-        """ Write configuration file to container subvolume 
+        """ Write configuration file to container subvolume
         :type corresponding_location: JobLocation
         """
         if not self.location_type:
@@ -840,7 +844,7 @@ class Job:
             source.compress = False
         if dest and not dest.compress:
             dest.compress = False
-        
+
         # Check if the filesystem is on identical hosts
         if str(source.url.netloc) == str(dest.url.netloc):
             _logger.info('Identical hosts for source and destination')
@@ -853,7 +857,7 @@ class Job:
                 source.identical_filesystem = False
                 dest.identical_filesystem = False
                 _logger.info('Source and destination are on different filesystems')
-            
+
         # Prepare environments
         _logger.info('preparing source and destination environment')
         source.prepare_environment()

@@ -5,8 +5,8 @@
 # Software Foundation; either version 2 of the License, or (at your option)
 # any later version.
 
-__version__ = '0.6.12'
-__author__ = 'Marco Schindler'
+__version__ = '0.6.13'
+__author__ = 'Marco Schindler, Lieven Tytgat'
 __email__ = 'masc@disappear.de'
 __maintainer__ = 'masc@disappear.de'
 __license__ = 'GPL'
