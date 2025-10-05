@@ -12,7 +12,7 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-def build_subprocess_args(cmd, url=None, server_alive_interval=5, server_alive_count_max=12):
+def build_subprocess_args(cmd, url=None, server_alive_interval=30, server_alive_count_max=12):
     """
     Create subprocess arguments for shell command/args to be executed
     Internally Wraps command into ssh call if url host name is not None
